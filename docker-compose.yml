@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile.dev
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+
+  collector:
+    build:
+      context: .
+      dockerfile: apps/collector/Dockerfile.dev
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+
+  reporter:
+    build:
+      context: .
+      dockerfile: apps/reporter/Dockerfile.dev
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development

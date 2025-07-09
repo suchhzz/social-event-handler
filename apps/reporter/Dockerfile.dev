@@ -1,0 +1,16 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY apps/reporter/package*.json ./apps/reporter/
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+WORKDIR /app/apps/reporter
+
+EXPOSE 3002
+
+CMD ["npm", "run", "start:dev"]
