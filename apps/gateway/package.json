@@ -9,5 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/body-parser": "^1.19.6"
+  },
+  "dependencies": {
+    "nats": "^2.29.3"
+  }
 }

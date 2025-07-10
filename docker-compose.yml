@@ -1,6 +1,16 @@
 version: "3.8"
 
 services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    restart: always
+
   gateway:
     build:
       context: .
@@ -12,6 +22,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+    depends_on:
+      - postgres
 
   collector:
     build:
@@ -24,6 +36,8 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
+    depends_on:
+      - postgres
 
   reporter:
     build:
@@ -36,3 +50,41 @@ services:
       - "3002:3002"
     environment:
       - NODE_ENV=development
+    depends_on:
+      - postgres
+
+  publisher:
+    image: andriiuni/events
+    platform: linux/arm64
+    depends_on:
+      - gateway
+    environment:
+      - EVENT_ENDPOINT=http://gateway:3000/events
+
+  postgres:
+    image: postgres:16
+    container_name: universe-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: universe
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  migrate:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:

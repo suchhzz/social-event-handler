@@ -13,3 +13,90 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Event {
+  id           String   @id @default(uuid())
+  timestamp    DateTime
+  source       Source
+  funnelStage  FunnelStage
+  eventType    String
+  facebookUser FacebookUser? @relation(fields: [facebookUserId], references: [id])
+  facebookUserId String?
+  tiktokUser   TiktokUser? @relation(fields: [tiktokUserId], references: [id])
+  tiktokUserId String?
+  fbEngagement FacebookEngagement? @relation(fields: [facebookEngagementId], references: [id])
+  facebookEngagementId String?
+  ttEngagement TiktokEngagement? @relation(fields: [tiktokEngagementId], references: [id])
+  tiktokEngagementId String?
+  @@map("event")
+}
+
+model FacebookUser {
+  id       String @id @default(uuid())
+  userId   String
+  name     String
+  age      Int
+  gender   Gender
+  country  String
+  city     String
+  events   Event[]
+  @@map("facebook_user")
+}
+
+model TiktokUser {
+  id        String @id @default(uuid())
+  userId    String
+  username  String
+  followers Int
+  events    Event[]
+  @@map("tiktok_user")
+}
+
+model FacebookEngagement {
+  id             String @id @default(uuid())
+  actionTime     DateTime
+  referrer       String?
+  videoId        String?
+  adId           String?
+  campaignId     String?
+  clickPosition  String?
+  device         String?
+  browser        String?
+  purchaseAmount String?
+  events         Event[]
+  @@map("facebook_engagement")
+}
+
+model TiktokEngagement {
+  id               String @id @default(uuid())
+  watchTime        Int?
+  percentageWatched Float?
+  device           String?
+  country          String?
+  videoId          String?
+  actionTime       DateTime?
+  profileId        String?
+  purchasedItem    String?
+  purchaseAmount   String?
+  events           Event[]
+  @@map("tiktok_engagement")
+}
+
+enum FunnelStage {
+  top
+  bottom
+  @@map("funnel_stage")
+}
+
+enum Source {
+  facebook
+  tiktok
+  @@map("source")
+}
+
+enum Gender {
+  male
+  female
+  non_binary
+  @@map("gender")
+}
