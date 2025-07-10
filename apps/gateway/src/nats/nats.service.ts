@@ -24,6 +24,5 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
 
     const data = this.sc.encode(JSON.stringify(message));
     this.nc.publish(subject, data);
-    console.log(`Published to ${subject}`, message);
   }
 }

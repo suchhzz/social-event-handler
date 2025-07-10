@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { NatsService } from "./nats/nats.service";
 
 @Controller("events")
@@ -7,21 +7,35 @@ export class AppController {
 
   @Post()
   async handleEvent(@Body() body: any) {
-    console.log("Received event:", body);
-
-    try {
-      await this.natsService.publish("events", body);
-
-      return {
-        status: "ok",
-        message: "Event processed and published to NATS",
-      };
-    } catch (error) {
-      console.error("Failed to publish event to NATS:", error);
+    if (!Array.isArray(body)) {
       return {
         status: "error",
-        message: "Event processed but failed to publish to NATS",
+        message: "Expected an array of events",
       };
     }
+
+    for (const event of body) {
+      const source = event.source?.toLowerCase();
+
+      let topic: string;
+      if (source === "facebook") {
+        topic = "events.facebook";
+      } else if (source === "tiktok") {
+        topic = "events.tiktok";
+      } else {
+        topic = "events.others";
+      }
+
+      try {
+        await this.natsService.publish(topic, event);
+      } catch (error) {
+        console.error("Failed to publish event to NATS:", error);
+      }
+    }
+
+    return {
+      status: "ok",
+      message: "Events processed and published to NATS",
+    };
   }
 }
