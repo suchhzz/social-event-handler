@@ -2,15 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY apps/collector/package*.json ./apps/collector/
+COPY apps/collector-ttk/package*.json ./apps/collector-ttk/
 COPY package*.json ./
 
 RUN npm install
 
 COPY . .
 
-WORKDIR /app/apps/collector
+WORKDIR /app/apps/collector-ttk
 
-EXPOSE 3001
+EXPOSE 3002
 
 CMD ["npm", "run", "start:dev"]

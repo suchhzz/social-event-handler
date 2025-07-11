@@ -3,7 +3,8 @@
   "compilerOptions": {
     "composite": true,
     "rootDir": "src",
-    "outDir": "../../dist/apps/gateway"
+    "outDir": "../../dist/apps/collector-fb"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [{ "path": "../../libs/common" }]
 }

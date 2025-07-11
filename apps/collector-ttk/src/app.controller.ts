@@ -8,8 +8,8 @@ export class AppController implements OnModuleInit {
   constructor(private readonly natsService: NatsService) {}
 
   async onModuleInit() {
-    await this.natsService.subscribe("events.facebook", async (event) => {
-      this.logger.log(`Received Facebook event: ${JSON.stringify(event)}`);
+    await this.natsService.subscribe("events.tiktok", async (event) => {
+      // this.logger.log(`Received Tiktok event: ${JSON.stringify(event)}`);
     });
   }
 }

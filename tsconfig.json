@@ -19,5 +19,13 @@
       "@db/*": ["libs/db/src/*"]
     }
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "./libs/common" },
+    { "path": "./libs/db" },
+    { "path": "./apps/gateway" },
+    { "path": "./apps/collector-fb" },
+    { "path": "./apps/collector-ttk" },
+    { "path": "./apps/reporter" }
+  ]
 }

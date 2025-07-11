@@ -1,5 +1,5 @@
 {
-  "name": "gateway",
+  "name": "collector",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,11 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@types/body-parser": "^1.19.6"
-  },
-  "dependencies": {
-    "nats": "^2.29.3"
-  }
+  "description": ""
 }

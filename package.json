@@ -5,6 +5,7 @@
     "@nestjs/platform-express": "^11.1.3",
     "@nestjs/terminus": "^11.0.0",
     "@prisma/client": "^6.11.1",
+    "@prisma/engines": "^6.11.1",
     "dotenv": "^17.2.0",
     "nats": "^2.29.3",
     "pg": "^8.16.3",

@@ -3,7 +3,7 @@ import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3003);
-  console.log("Reporter started on http://localhost:3003");
+  await app.listen(3002);
+  console.log("Collector started on http://localhost:3002");
 }
 bootstrap();
