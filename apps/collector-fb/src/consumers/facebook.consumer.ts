@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { NatsService } from "../nats/nats.service";
-import { FacebookEventSchema } from "../schemas/facebook-event.schema";
+import { parseFacebookEvent } from "../schemas/facebook-event.schema";
 import { FacebookService } from "../app.service";
 
 @Injectable()
@@ -13,14 +13,14 @@ export class FacebookConsumer implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.natsService.subscribe("events.facebook", async (event) => {
-      const result = FacebookEventSchema.safeParse(event);
+    await this.natsService.subscribe("events.facebook1", async (event) => {
+      const result = parseFacebookEvent(event);
 
-      if (!result.success) {
+      if (!result) {
         return;
       }
 
-      await this.facebookService.saveEvent(result.data);
+      await this.facebookService.saveEvent(result);
     });
   }
 }

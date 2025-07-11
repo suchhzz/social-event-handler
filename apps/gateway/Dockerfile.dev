@@ -2,15 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY apps/gateway/package*.json ./apps/gateway/
-
 COPY package*.json ./
 
-RUN npm install
-
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    rm -f package-lock.json && \
+    npm install --legacy-peer-deps
+    
 COPY . .
-
-WORKDIR /app/apps/gateway
 
 EXPOSE 3000
 

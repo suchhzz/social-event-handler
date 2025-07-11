@@ -1,8 +1,20 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "../../dist/libs/db"
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../../dist/libs/db",
+    "rootDir": "src",
+    "module": "commonjs",
+    "target": "ES2020",
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@db": ["src"],
+      "@common": ["../common/src"]
+    }
   },
   "include": ["src"]
 }

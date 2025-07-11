@@ -1,20 +1,16 @@
 FROM node:18-alpine
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
 COPY package*.json ./
-COPY apps/collector-ttk/package*.json ./apps/collector-ttk/
+
+COPY ./libs/db/prisma/schema.prisma ./prisma/schema.prisma
 
 RUN npm install
-
-COPY prisma ./prisma
 
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
 COPY . .
-
-WORKDIR /app/apps/collector-ttk
-
-EXPOSE 3001
 
 CMD ["npm", "run", "start:dev"]

@@ -1,60 +1,57 @@
 import { z } from "zod";
 
-const FunnelStageSchema = z.enum(["top", "bottom"]);
-const SourceSchema = z.literal("tiktok");
+const TiktokUserSchema = z
+  .object({
+    userId: z.string().uuid(),
+    username: z.string().min(1),
+    followers: z.number().int().nonnegative(),
+  })
+  .strict();
 
-const TiktokTopEventTypeSchema = z.enum([
-  "video.view",
-  "like",
-  "share",
-  "comment",
-]);
-const TiktokBottomEventTypeSchema = z.enum([
-  "profile.visit",
-  "purchase",
-  "follow",
-]);
-const TiktokEventTypeSchema = z.union([
-  TiktokTopEventTypeSchema,
-  TiktokBottomEventTypeSchema,
-]);
+const TiktokEngagementTopSchema = z
+  .object({
+    watchTime: z.number().int().positive(),
+    percentageWatched: z.number().min(0).max(100),
+    device: z.enum(["Android", "iOS", "Desktop"]),
+    country: z.string().min(2),
+    videoId: z.string().min(1),
+  })
+  .strict();
 
-const TiktokUserSchema = z.object({
-  userId: z.string(),
-  username: z.string(),
-  followers: z.number().int(),
-});
+const TiktokEngagementBottomSchema = z
+  .object({
+    actionTime: z.string().datetime(),
+    profileId: z.string().nullable(),
+    purchasedItem: z.string().nullable(),
+    purchaseAmount: z.string().nullable(),
+  })
+  .strict();
 
-const TiktokEngagementTopSchema = z.object({
-  watchTime: z.number().int(),
-  percentageWatched: z.number(),
-  device: z.enum(["Android", "iOS", "Desktop"]),
-  country: z.string(),
-  videoId: z.string(),
-});
-
-const TiktokEngagementBottomSchema = z.object({
-  actionTime: z.string().datetime(),
-  profileId: z.string().nullable(),
-  purchasedItem: z.string().nullable(),
-  purchaseAmount: z.string().nullable(),
-});
-
-const TiktokEngagementSchema = z.union([
-  TiktokEngagementTopSchema,
-  TiktokEngagementBottomSchema,
-]);
-
-export const TiktokEventSchema = z.object({
-  eventId: z.string(),
-  timestamp: z.string().datetime(),
-  source: SourceSchema,
-  funnelStage: FunnelStageSchema,
-  eventType: TiktokEventTypeSchema,
-  data: z.object({
-    user: TiktokUserSchema,
-    engagement: TiktokEngagementSchema,
+const TiktokEventSchema = z.discriminatedUnion("funnelStage", [
+  z.object({
+    eventId: z.string().regex(/^ttk-[a-f0-9-]{36}$/i),
+    timestamp: z.string().datetime(),
+    source: z.literal("tiktok"),
+    funnelStage: z.literal("top"),
+    eventType: z.enum(["video.view", "like", "share", "comment"]),
+    data: z.object({
+      user: TiktokUserSchema,
+      engagement: TiktokEngagementTopSchema,
+    }),
   }),
-});
+  z.object({
+    eventId: z.string().regex(/^ttk-[a-f0-9-]{36}$/i),
+    timestamp: z.string().datetime(),
+    source: z.literal("tiktok"),
+    funnelStage: z.literal("bottom"),
+    eventType: z.enum(["profile.visit", "purchase", "follow"]),
+    data: z.object({
+      user: TiktokUserSchema,
+      engagement: TiktokEngagementBottomSchema,
+    }),
+  }),
+]);
 
-export type TiktokEventParsed = z.infer<typeof TiktokEventSchema>;
+export function parseTiktokEvent(input: unknown) {
+  return TiktokEventSchema.parse(input);
+}

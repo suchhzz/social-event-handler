@@ -1,87 +1,81 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "./prisma/prisma.service";
-import { FacebookEventParsed } from "./schemas/facebook-event.schema";
 
 @Injectable()
 export class FacebookRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async saveEventWithRelations(event: FacebookEventParsed) {
-    let fbUser = await this.prisma.facebookUser.findFirst({
-      where: { userId: event.data.user.userId },
+  private toDbFormat(str: string): string {
+    return str.replace(".", "_").replace("-", "_").toLowerCase();
+  }
+
+  async saveEvent(rawEvent: any) {
+    // 1. Обрабатываем пользователя
+    const user = await this.prisma.facebookUser.upsert({
+      where: { userId: rawEvent.data.user.userId },
+      create: {
+        userId: rawEvent.data.user.userId,
+        name: rawEvent.data.user.name,
+        age: rawEvent.data.user.age,
+        gender: this.toDbFormat(rawEvent.data.user.gender),
+        location: {
+          create: {
+            country: rawEvent.data.user.location.country,
+            city: rawEvent.data.user.location.city,
+          },
+        },
+      },
+      update: {
+        name: rawEvent.data.user.name,
+        age: rawEvent.data.user.age,
+        gender: this.toDbFormat(rawEvent.data.user.gender),
+      },
     });
 
-    if (!fbUser) {
-      fbUser = await this.prisma.facebookUser.create({
+    // 2. Обрабатываем engagement
+    let engagementTopId: number | null = null;
+    let engagementBottomId: number | null = null;
+
+    if (rawEvent.funnelStage === "top") {
+      const engagement = await this.prisma.facebookEngagementTop.create({
         data: {
-          userId: event.data.user.userId,
-          name: event.data.user.name,
-          age: event.data.user.age,
-          gender: event.data.user.gender.replace("-", "_") as
-            | "male"
-            | "female"
-            | "non_binary",
-          country: event.data.user.location.country,
-          city: event.data.user.location.city,
+          actionTime: new Date(rawEvent.data.engagement.actionTime),
+          referrer: this.toDbFormat(rawEvent.data.engagement.referrer),
+          videoId: rawEvent.data.engagement.videoId,
         },
       });
+      engagementTopId = engagement.id;
+    } else {
+      const engagement = await this.prisma.facebookEngagementBottom.create({
+        data: {
+          adId: rawEvent.data.engagement.adId,
+          campaignId: rawEvent.data.engagement.campaignId,
+          clickPosition: this.toDbFormat(
+            rawEvent.data.engagement.clickPosition
+          ),
+          device: this.toDbFormat(rawEvent.data.engagement.device),
+          browser: rawEvent.data.engagement.browser, // Браузеры и так в правильном формате
+          purchaseAmount: rawEvent.data.engagement.purchaseAmount,
+        },
+      });
+      engagementBottomId = engagement.id;
     }
 
-    let fbEngagement;
-
-    if (event.funnelStage === "top") {
-      const engagementTop = event.data.engagement as {
-        actionTime: string;
-        referrer: "newsfeed" | "marketplace" | "groups";
-        videoId: string | null;
-      };
-
-      fbEngagement = await this.prisma.facebookEngagement.create({
-        data: {
-          actionTime: new Date(engagementTop.actionTime),
-          referrer: engagementTop.referrer,
-          videoId: engagementTop.videoId,
-          adId: null,
-          campaignId: null,
-          clickPosition: null,
-          device: null,
-          browser: null,
-          purchaseAmount: null,
-        },
-      });
-    } else if (event.funnelStage === "bottom") {
-      const engagementBottom = event.data.engagement as {
-        adId: string;
-        campaignId: string;
-        clickPosition: "top_left" | "bottom_right" | "center";
-        device: "mobile" | "desktop";
-        browser: "Chrome" | "Firefox" | "Safari";
-        purchaseAmount: string | null;
-      };
-
-      fbEngagement = await this.prisma.facebookEngagement.create({
-        data: {
-          actionTime: null,
-          referrer: null,
-          videoId: null,
-          adId: engagementBottom.adId,
-          campaignId: engagementBottom.campaignId,
-          clickPosition: engagementBottom.clickPosition,
-          device: engagementBottom.device,
-          browser: engagementBottom.browser,
-          purchaseAmount: engagementBottom.purchaseAmount,
-        },
-      });
-    }
-
-    await this.prisma.event.create({
+    // 3. Сохраняем основное событие
+    await this.prisma.facebookEvent.create({
       data: {
-        timestamp: new Date(event.timestamp),
+        eventId: rawEvent.eventId,
+        timestamp: new Date(rawEvent.timestamp),
         source: "facebook",
-        funnelStage: event.funnelStage,
-        eventType: event.eventType,
-        facebookUserId: fbUser.id,
-        facebookEngagementId: fbEngagement.id,
+        funnelStage: this.toDbFormat(rawEvent.funnelStage),
+        eventType: this.toDbFormat(rawEvent.eventType),
+        userId: user.id,
+        ...(engagementTopId && {
+          engagementTop: { connect: { id: engagementTopId } },
+        }),
+        ...(engagementBottomId && {
+          engagementBottom: { connect: { id: engagementBottomId } },
+        }),
       },
     });
   }

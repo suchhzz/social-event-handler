@@ -1,81 +1,70 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "./prisma/prisma.service";
-import { TiktokEventParsed } from "./schemas/tiktok-event.schema";
 
 @Injectable()
 export class TiktokRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async saveEventWithRelations(event: TiktokEventParsed) {
-    let ttUser = await this.prisma.tiktokUser.findFirst({
-      where: { userId: event.data.user.userId },
+  private toDbFormat(str: string): string {
+    return str.replace(".", "_").toLowerCase();
+  }
+
+  async saveEvent(rawEvent: any) {
+    const user = await this.prisma.tiktokUser.upsert({
+      where: { userId: rawEvent.data.user.userId },
+      create: {
+        userId: rawEvent.data.user.userId,
+        username: rawEvent.data.user.username,
+        followers: rawEvent.data.user.followers,
+      },
+      update: {
+        username: rawEvent.data.user.username,
+        followers: rawEvent.data.user.followers,
+      },
     });
 
-    if (!ttUser) {
-      ttUser = await this.prisma.tiktokUser.create({
+    let engagementTopId: number | null = null;
+    let engagementBottomId: number | null = null;
+
+    if (rawEvent.funnelStage === "top") {
+      const engagement = rawEvent.data.engagement;
+      const created = await this.prisma.tiktokEngagementTop.create({
         data: {
-          userId: event.data.user.userId,
-          username: event.data.user.username,
-          followers: event.data.user.followers,
+          watchTime: engagement.watchTime,
+          percentageWatched: engagement.percentageWatched,
+          device: engagement.device.toUpperCase() as any,
+          country: engagement.country,
+          videoId: engagement.videoId,
         },
       });
+      engagementTopId = created.id;
+    } else {
+      const engagement = rawEvent.data.engagement;
+      const created = await this.prisma.tiktokEngagementBottom.create({
+        data: {
+          actionTime: new Date(engagement.actionTime),
+          profileId: engagement.profileId || null,
+          purchasedItem: engagement.purchasedItem || null,
+          purchaseAmount: engagement.purchaseAmount || null,
+        },
+      });
+      engagementBottomId = created.id;
     }
 
-    let ttEngagement;
-
-    if (event.funnelStage === "top") {
-      const engagementTop = event.data.engagement as {
-        watchTime: number;
-        percentageWatched: number;
-        device: "Android" | "iOS" | "Desktop";
-        country: string;
-        videoId: string;
-      };
-
-      ttEngagement = await this.prisma.tiktokEngagement.create({
-        data: {
-          watchTime: engagementTop.watchTime,
-          percentageWatched: engagementTop.percentageWatched,
-          device: engagementTop.device,
-          country: engagementTop.country,
-          videoId: engagementTop.videoId,
-          actionTime: null,
-          profileId: null,
-          purchasedItem: null,
-          purchaseAmount: null,
-        },
-      });
-    } else if (event.funnelStage === "bottom") {
-      const engagementBottom = event.data.engagement as {
-        actionTime: string;
-        profileId: string | null;
-        purchasedItem: string | null;
-        purchaseAmount: string | null;
-      };
-
-      ttEngagement = await this.prisma.tiktokEngagement.create({
-        data: {
-          watchTime: null,
-          percentageWatched: null,
-          device: null,
-          country: null,
-          videoId: null,
-          actionTime: new Date(engagementBottom.actionTime),
-          profileId: engagementBottom.profileId,
-          purchasedItem: engagementBottom.purchasedItem,
-          purchaseAmount: engagementBottom.purchaseAmount,
-        },
-      });
-    }
-
-    await this.prisma.event.create({
+    await this.prisma.tiktokEvent.create({
       data: {
-        timestamp: new Date(event.timestamp),
+        eventId: rawEvent.eventId,
+        timestamp: new Date(rawEvent.timestamp),
         source: "tiktok",
-        funnelStage: event.funnelStage,
-        eventType: event.eventType,
-        tiktokUserId: ttUser.id,
-        tiktokEngagementId: ttEngagement.id,
+        funnelStage: rawEvent.funnelStage.toLowerCase() as any,
+        eventType: this.toDbFormat(rawEvent.eventType) as any,
+        userId: user.id,
+        ...(engagementTopId && {
+          engagementTop: { connect: { id: engagementTopId } },
+        }),
+        ...(engagementBottomId && {
+          engagementBottom: { connect: { id: engagementBottomId } },
+        }),
       },
     });
   }

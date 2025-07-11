@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { NatsService } from "./nats/nats.service";
 
 @Controller("events")
@@ -37,5 +37,12 @@ export class AppController {
       status: "ok",
       message: "Events processed and published to NATS",
     };
+  }
+
+  @Get()
+  test() {
+    console.log("test");
+
+    return { message: "test" };
   }
 }

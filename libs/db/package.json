@@ -1,0 +1,22 @@
+{
+  "name": "@myorg/db",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "generate": "prisma generate"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.11.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.11.1"
+  }
+}
