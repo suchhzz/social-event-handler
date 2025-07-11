@@ -2,15 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY apps/collector-ttk/package*.json ./apps/collector-ttk/
 COPY package*.json ./
+COPY apps/collector-ttk/package*.json ./apps/collector-ttk/
 
 RUN npm install
+
+COPY prisma ./prisma
+
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 COPY . .
 
 WORKDIR /app/apps/collector-ttk
 
-EXPOSE 3002
+EXPOSE 3001
 
 CMD ["npm", "run", "start:dev"]
