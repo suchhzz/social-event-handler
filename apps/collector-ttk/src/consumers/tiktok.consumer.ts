@@ -13,7 +13,7 @@ export class TiktokConsumer implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.natsService.subscribe("events.tiktok", async (event) => {
+    await this.natsService.subscribe("events.tiktok1", async (event) => {
       const result = parseTiktokEvent(event);
       console.log("receive event");
 

@@ -79,8 +79,8 @@ services:
       - "3003:3003"
     environment:
       - NODE_ENV=development
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres
 
   migrate:
     image: node:18-alpine
