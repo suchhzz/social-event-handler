@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@postgres:5432/universe"
+}
+
+enum FunnelStage {
+  top
+  bottom
+}
+
+enum FacebookTopEventType {
+  ad_view
+  page_like
+  comment
+  video_view
+}
+
+enum FacebookBottomEventType {
+  ad_click
+  form_submission
+  checkout_complete
+}
+
+enum FacebookEventType {
+  ad_view
+  page_like
+  comment
+  video_view
+  ad_click
+  form_submission
+  checkout_complete
+}
+
+enum Gender {
+  male
+  female
+  non_binary
+}
+
+enum Referrer {
+  newsfeed
+  marketplace
+  groups
+}
+
+enum ClickPosition {
+  top_left
+  bottom_right
+  center
+}
+
+enum Device {
+  mobile
+  desktop
+}
+
+enum Browser {
+  Chrome
+  Firefox
+  Safari
+}
+
+model FacebookUserLocation {
+  id      Int      @id @default(autoincrement())
+  country String
+  city    String
+
+  user    FacebookUser? @relation(fields: [userId], references: [id])
+  userId  Int?          @unique
+
+  @@map("facebook_user_location")
+}
+
+model FacebookUser {
+  id       Int           @id @default(autoincrement())
+  userId   String        @unique
+  name     String
+  age      Int
+  gender   Gender
+  location FacebookUserLocation?
+
+  events   FacebookEvent[]
+
+  @@map("facebook_user")
+}
+
+model FacebookEngagementTop {
+  id          Int           @id @default(autoincrement())
+  actionTime  DateTime
+  referrer    Referrer
+  videoId     String?
+
+  eventId     Int?          @unique
+  event       FacebookEvent? @relation(fields: [eventId], references: [id])
+
+  @@map("facebook_engagement_top")
+}
+
+model FacebookEngagementBottom {
+  id             Int           @id @default(autoincrement())
+  adId           String
+  campaignId     String
+  clickPosition  ClickPosition
+  device         Device
+  browser        Browser
+  purchaseAmount String?
+
+  eventId        Int?          @unique
+  event          FacebookEvent? @relation(fields: [eventId], references: [id])
+
+  @@map("facebook_engagement_bottom")
+}
+
+model FacebookEvent {
+  id                  Int                    @id @default(autoincrement())
+  eventId              String                 @unique
+  timestamp            DateTime
+  source               String                 @default("facebook")
+  funnelStage          FunnelStage
+  eventType            FacebookEventType
+
+  userId               Int
+  user                 FacebookUser           @relation(fields: [userId], references: [id])
+
+  engagementTop        FacebookEngagementTop?
+  engagementBottom     FacebookEngagementBottom?
+
+  @@map("facebook_event")
+}
+
+enum TiktokTopEventType {
+  video_view
+  like
+  share
+  comment
+}
+
+enum TiktokBottomEventType {
+  profile_visit
+  purchase
+  follow
+}
+
+enum TiktokEventType {
+  video_view
+  like
+  share
+  comment
+  profile_visit
+  purchase
+  follow
+}
+
+enum TiktokDevice {
+  Android
+  iOS
+  Desktop
+}
+
+model TiktokUser {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  username  String
+  followers Int
+
+  events    TiktokEvent[]
+
+  @@map("tiktok_user")
+}
+
+model TiktokEngagementTop {
+  id                Int       @id @default(autoincrement())
+  watchTime         Int
+  percentageWatched Float    
+  device            TiktokDevice
+  country           String
+  videoId           String
+
+  eventId           Int?      @unique
+  event             TiktokEvent? @relation(fields: [eventId], references: [id])
+
+  @@map("tiktok_engagement_top")
+}
+
+model TiktokEngagementBottom {
+  id              Int       @id @default(autoincrement())
+  actionTime      DateTime
+  profileId       String?
+  purchasedItem   String?
+  purchaseAmount  String? 
+
+  eventId         Int?      @unique
+  event           TiktokEvent? @relation(fields: [eventId], references: [id])
+
+  @@map("tiktok_engagement_bottom")
+}
+
+model TiktokEvent {
+  id                  Int                    @id @default(autoincrement())
+  eventId             String                 @unique
+  timestamp           DateTime
+  source              String                 @default("tiktok")
+  funnelStage         FunnelStage
+  eventType           TiktokEventType
+
+  userId              Int
+  user                TiktokUser             @relation(fields: [userId], references: [id])
+
+  engagementTop       TiktokEngagementTop?
+  engagementBottom    TiktokEngagementBottom?
+
+  @@map("tiktok_event")
+}

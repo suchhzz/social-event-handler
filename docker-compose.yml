@@ -70,15 +70,16 @@ services:
 
   reporter:
     build:
-      context: ./apps/reporter
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: ./apps/reporter/Dockerfile.dev
     volumes:
       - ./apps/reporter:/app
-      - /app/node_modules
+      - ./apps/reporter/node_modules:/app/node_modules
     ports:
       - "3003:3003"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     # depends_on:
     #   - postgres
 

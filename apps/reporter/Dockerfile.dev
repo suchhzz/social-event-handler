@@ -1,12 +1,20 @@
-FROM node:18-alpine
+FROM node:20
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+COPY ./libs/db/prisma/schema.prisma ./prisma/schema.prisma
 
-COPY . .
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    rm -f package-lock.json && \
+    npm install --legacy-peer-deps
+
+    
+COPY apps/reporter/ .
+    
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 EXPOSE 3003
 
