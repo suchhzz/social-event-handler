@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { NatsService } from "../nats/nats.service";
 import { TiktokService } from "../app.service";
-import { parseTiktokEvent } from "./schemas/tiktok-event.schema";
+import { parseTiktokEvent } from "../schemas/tiktok-event.schema";
 
 @Injectable()
 export class TiktokConsumer implements OnModuleInit {
@@ -14,9 +14,8 @@ export class TiktokConsumer implements OnModuleInit {
 
   async onModuleInit() {
     await this.natsService.subscribe("events.tiktok", async (event) => {
-      console.log("receive event");
-
       const result = parseTiktokEvent(event);
+      console.log("receive event");
 
       if (!result) {
         return;

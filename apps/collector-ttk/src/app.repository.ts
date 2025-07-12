@@ -9,6 +9,30 @@ export class TiktokRepository {
     return str.replace(".", "_").toLowerCase();
   }
 
+  private mapDevice(device: string): "Android" | "iOS" | "Desktop" {
+    const map = {
+      ANDROID: "Android",
+      IOS: "iOS",
+      DESKTOP: "Desktop",
+    } as const;
+
+    const key = device.toUpperCase() as keyof typeof map;
+    const result = map[key];
+    if (!result) throw new Error(`Unknown device: ${device}`);
+    return result;
+  }
+
+  private mapFunnelStage(stage: string): "top" | "bottom" {
+    const stageLower = stage.toLowerCase();
+    if (stageLower === "top" || stageLower === "bottom")
+      return stageLower as "top" | "bottom";
+    throw new Error(`Unknown funnelStage: ${stage}`);
+  }
+
+  private mapEventType(eventType: string): string {
+    return this.toDbFormat(eventType);
+  }
+
   async saveEvent(rawEvent: any) {
     const user = await this.prisma.tiktokUser.upsert({
       where: { userId: rawEvent.data.user.userId },
@@ -26,13 +50,13 @@ export class TiktokRepository {
     let engagementTopId: number | null = null;
     let engagementBottomId: number | null = null;
 
-    if (rawEvent.funnelStage === "top") {
+    if (rawEvent.funnelStage.toLowerCase() === "top") {
       const engagement = rawEvent.data.engagement;
       const created = await this.prisma.tiktokEngagementTop.create({
         data: {
           watchTime: engagement.watchTime,
           percentageWatched: engagement.percentageWatched,
-          device: engagement.device.toUpperCase() as any,
+          device: this.mapDevice(engagement.device),
           country: engagement.country,
           videoId: engagement.videoId,
         },
@@ -56,8 +80,8 @@ export class TiktokRepository {
         eventId: rawEvent.eventId,
         timestamp: new Date(rawEvent.timestamp),
         source: "tiktok",
-        funnelStage: rawEvent.funnelStage.toLowerCase() as any,
-        eventType: this.toDbFormat(rawEvent.eventType) as any,
+        funnelStage: this.mapFunnelStage(rawEvent.funnelStage),
+        eventType: this.mapEventType(rawEvent.eventType) as any,
         userId: user.id,
         ...(engagementTopId && {
           engagementTop: { connect: { id: engagementTopId } },
