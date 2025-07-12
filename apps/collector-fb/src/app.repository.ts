@@ -10,7 +10,6 @@ export class FacebookRepository {
   }
 
   async saveEvent(rawEvent: any) {
-    // 1. Обрабатываем пользователя
     const user = await this.prisma.facebookUser.upsert({
       where: { userId: rawEvent.data.user.userId },
       create: {
@@ -32,7 +31,6 @@ export class FacebookRepository {
       },
     });
 
-    // 2. Обрабатываем engagement
     let engagementTopId: number | null = null;
     let engagementBottomId: number | null = null;
 
@@ -54,14 +52,13 @@ export class FacebookRepository {
             rawEvent.data.engagement.clickPosition
           ),
           device: this.toDbFormat(rawEvent.data.engagement.device),
-          browser: rawEvent.data.engagement.browser, // Браузеры и так в правильном формате
+          browser: rawEvent.data.engagement.browser,
           purchaseAmount: rawEvent.data.engagement.purchaseAmount,
         },
       });
       engagementBottomId = engagement.id;
     }
 
-    // 3. Сохраняем основное событие
     await this.prisma.facebookEvent.create({
       data: {
         eventId: rawEvent.eventId,

@@ -1,16 +1,16 @@
-FROM node:18-alpine
-RUN apk add --no-cache openssl
+FROM node:20
 
 WORKDIR /app
 
-COPY apps/reporter/package*.json ./
+COPY apps/collector-ttk/package*.json ./
 
 COPY ./libs/db/prisma/schema.prisma ./prisma/schema.prisma
 
 RUN npm cache clean --force && rm -rf node_modules package-lock.json
 RUN npm install
-RUN npx prisma generate --schema=./prisma/schema.prisma
 
-COPY apps/reporter .
+COPY apps/collector-ttk .
+
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 CMD ["npm", "run", "start:dev"]

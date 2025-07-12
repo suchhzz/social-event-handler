@@ -13,7 +13,7 @@ export class FacebookConsumer implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.natsService.subscribe("events.facebook1", async (event) => {
+    await this.natsService.subscribe("events.facebook", async (event) => {
       const result = parseFacebookEvent(event);
 
       if (!result) {
