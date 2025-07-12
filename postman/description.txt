@@ -1,0 +1,5 @@
+avg by(route) (
+  http_request_duration_seconds_sum
+  /
+  http_request_duration_seconds_count
+)

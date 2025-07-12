@@ -3,6 +3,7 @@ import { ReportsService } from "./app.service";
 import { EventsReportDto } from "./dto/events-report.dto";
 import { RevenueReportDto } from "./dto/revenue.dto";
 import { DemographicsReportDto } from "./dto/demographics.dto";
+import { httpRequestDurationMicroseconds } from "./metrics/metrics";
 
 @Controller("reports")
 export class ReportsController {
@@ -10,16 +11,55 @@ export class ReportsController {
 
   @Get("events")
   async getEventsReport(@Query() query: EventsReportDto) {
-    return this.reportsService.getEventsReport(query);
+    const endTimer = httpRequestDurationMicroseconds.startTimer({
+      method: "GET",
+      route: "events",
+    });
+
+    try {
+      const eventReports = this.reportsService.getEventsReport(query);
+      endTimer({ status: 200 });
+
+      return eventReports;
+    } catch (error) {
+      endTimer({ status: 500 });
+      throw error;
+    }
   }
 
   @Get("revenue")
   async getRevenueReport(@Query() query: RevenueReportDto) {
-    return this.reportsService.getRevenueReport(query);
+    const endTimer = httpRequestDurationMicroseconds.startTimer({
+      method: "GET",
+      route: "revenue",
+    });
+
+    try {
+      const revenue = await this.reportsService.getRevenueReport(query);
+      endTimer({ status: "200" });
+      return revenue;
+    } catch (error) {
+      endTimer({ status: "500" });
+      throw error;
+    }
   }
 
   @Get("demographics")
   async getDemographicsReport(@Query() query: DemographicsReportDto) {
-    return this.reportsService.getDemographicsReport(query);
+    const endTimer = httpRequestDurationMicroseconds.startTimer({
+      method: "GET",
+      route: "demographics",
+    });
+
+    try {
+      const demographics = await this.reportsService.getDemographicsReport(
+        query
+      );
+      endTimer({ status: "200" });
+      return demographics;
+    } catch (error) {
+      endTimer({ status: "500" });
+      throw error;
+    }
   }
 }

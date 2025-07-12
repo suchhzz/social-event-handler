@@ -1,5 +1,10 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { collectDefaultMetrics, register } from "prom-client";
+
+if (!register.getSingleMetric("process_cpu_user_seconds_total")) {
+  collectDefaultMetrics();
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
