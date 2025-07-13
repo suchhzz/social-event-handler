@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { connect, NatsConnection, StringCodec } from "nats";
+import { HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
 
 @Injectable()
 export class NatsService implements OnModuleInit, OnModuleDestroy {
@@ -24,5 +25,21 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
 
     const data = this.sc.encode(JSON.stringify(message));
     this.nc.publish(subject, data);
+  }
+
+  isConnected(): boolean {
+    return this.nc != null && !this.nc.isClosed();
+  }
+
+  async checkConnection(): Promise<HealthIndicatorResult> {
+    const connected = this.isConnected();
+
+    if (connected) {
+      return { nats: { status: "up" } };
+    }
+
+    throw new HealthCheckError("NATS is not connected", {
+      nats: { status: "down" },
+    });
   }
 }

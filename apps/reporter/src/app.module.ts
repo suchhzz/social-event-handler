@@ -5,9 +5,12 @@ import { ReportsRepository } from "./app.repository";
 import { PrismaService } from "./prisma/prisma.service";
 import { MetricsController } from "./metrics/metrics.controller";
 import { MetricsService } from "./metrics/metrics.service";
+import { HealthController } from "./health/health.controller";
+import { TerminusModule } from "@nestjs/terminus";
 
 @Module({
-  controllers: [ReportsController, MetricsController],
+  imports: [TerminusModule],
+  controllers: [ReportsController, MetricsController, HealthController],
   providers: [ReportsService, ReportsRepository, PrismaService, MetricsService],
 })
 export class AppModule {}

@@ -6,9 +6,12 @@ import { FacebookRepository } from "./app.repository";
 import { FacebookService } from "./app.service";
 import { MetricsService } from "./metrics/metrics.service";
 import { MetricsController } from "./metrics/metrics.controller";
+import { HealthController } from "./health/health.controller";
+import { TerminusModule } from "@nestjs/terminus";
 
 @Module({
-  controllers: [MetricsController],
+  imports: [TerminusModule],
+  controllers: [MetricsController, HealthController],
   providers: [
     NatsService,
     FacebookConsumer,

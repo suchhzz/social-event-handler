@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:16
@@ -13,6 +11,11 @@ services:
       POSTGRES_DB: universe
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d universe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nats:
     image: nats:latest
@@ -21,6 +24,7 @@ services:
       - "8222:8222"
     volumes:
       - ./nats-server.conf:/etc/nats/nats-server.conf
+      - nats-data:/data
     command: ["-c", "/etc/nats/nats-server.conf"]
     restart: always
 
@@ -36,7 +40,13 @@ services:
     environment:
       - NODE_ENV=development
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://gateway:3000/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   collector-fb:
     build:
@@ -51,7 +61,15 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://collector-fb:3001/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   collector-ttk:
     build:
@@ -66,7 +84,15 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://collector-ttk:3002/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   reporter:
     build:
@@ -81,7 +107,13 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://reporter:3003/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   migrate:
     image: node:20
@@ -93,13 +125,15 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   publisher:
     image: andriiuni/events
     platform: linux/arm64
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
     environment:
       - EVENT_ENDPOINT=http://gateway:3000/events
 
@@ -111,6 +145,15 @@ services:
     ports:
       - "9090:9090"
     restart: always
+    depends_on:
+      gateway:
+        condition: service_healthy
+      collector-fb:
+        condition: service_healthy
+      collector-ttk:
+        condition: service_healthy
+      reporter:
+        condition: service_healthy
 
   grafana:
     image: grafana/grafana:latest
@@ -126,7 +169,17 @@ services:
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      gateway:
+        condition: service_healthy
+      collector-fb:
+        condition: service_healthy
+      collector-ttk:
+        condition: service_healthy
+      reporter:
+        condition: service_healthy
 
 volumes:
   postgres-data:
+  nats-data:
   grafana-data:
