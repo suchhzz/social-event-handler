@@ -1,9 +1,12 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { connect, NatsConnection, StringCodec } from "nats";
 import { HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
+import { WinstonLogger } from "../logger/winston-logger.service";
 
 @Injectable()
 export class NatsService implements OnModuleInit, OnModuleDestroy {
+  constructor(private readonly logger: WinstonLogger) {}
+
   private nc: NatsConnection | null = null;
   private sc = StringCodec();
   private isShuttingDown = false;
@@ -14,9 +17,7 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    if (this.nc) {
-      await this.nc.close();
-    }
+    this.gracefulDisconnect();
   }
 
   publish(subject: string, message: any) {
@@ -50,11 +51,12 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
 
     try {
       await this.nc.drain();
-      console.log("NATS connection drained successfully");
-    } catch (err) {
-      console.error("Error draining NATS connection:", err);
+      this.logger.log("NATS connection drained successfully");
+    } catch (err: Error | any) {
+      this.logger.error("Error draining NATS connection:", err);
     } finally {
       await this.nc.close();
+      this.logger.log("NATS connection closed");
     }
   }
 }

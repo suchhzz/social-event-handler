@@ -47,7 +47,7 @@ services:
     stop_grace_period: 30s
     init: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://gateway:3000/health/liveness"]
+      test: ["CMD", "curl", "-f", "http://gateway:3000/health/readiness"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -71,7 +71,7 @@ services:
       gateway:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://collector-fb:3001/health/liveness"]
+      test: ["CMD", "curl", "-f", "http://collector-fb:3001/health/readiness"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -95,7 +95,7 @@ services:
       gateway:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://collector-ttk:3002/health/liveness"]
+      test: ["CMD", "curl", "-f", "http://collector-ttk:3002/health/readiness"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,7 +117,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://reporter:3003/health/liveness"]
+      test: ["CMD", "curl", "-f", "http://reporter:3003/health/readiness"]
       interval: 10s
       timeout: 5s
       retries: 5

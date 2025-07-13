@@ -6,13 +6,16 @@ import {
 } from "@nestjs/common";
 import { HealthCheckError, HealthIndicatorResult } from "@nestjs/terminus";
 import { connect, NatsConnection, StringCodec, Subscription } from "nats";
+import { WinstonLogger } from "../logger/winston-logger.service";
 
 @Injectable()
 export class NatsService implements OnModuleInit, OnModuleDestroy {
+  constructor(private readonly logger: WinstonLogger) {}
+
   private nc: NatsConnection | null = null;
   private subscriptions: Subscription[] = [];
   private sc = StringCodec();
-  private readonly logger = new Logger(NatsService.name);
+  private isShuttingDown = false;
 
   async connect() {
     if (!this.nc) {
@@ -31,10 +34,7 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
     }
     this.subscriptions = [];
 
-    if (this.nc) {
-      await this.nc.close();
-      this.logger.log("NATS connection closed");
-    }
+    this.gracefulDisconnect();
   }
 
   async subscribe(topic: string, handler: (msg: any) => Promise<void>) {
@@ -56,7 +56,7 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
         try {
           const data = JSON.parse(dataStr);
           await handler(data);
-        } catch (error) {
+        } catch (error: Error | any) {
           this.logger.error("Failed to process message", error);
         }
       }
@@ -87,5 +87,20 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
     throw new HealthCheckError("NATS is not connected", {
       nats: { status: "down" },
     });
+  }
+
+  async gracefulDisconnect() {
+    if (this.isShuttingDown || !this.nc) return;
+    this.isShuttingDown = true;
+
+    try {
+      await this.nc.drain();
+      this.logger.log("NATS connection drained successfully");
+    } catch (err: Error | any) {
+      this.logger.error("Error draining NATS connection:", err);
+    } finally {
+      await this.nc.close();
+      this.logger.log("NATS connection closed");
+    }
   }
 }

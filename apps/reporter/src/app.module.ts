@@ -9,11 +9,18 @@ import { HealthController } from "./health/health.controller";
 import { TerminusModule } from "@nestjs/terminus";
 import { CorrelationIdMiddleware } from "./common/middlewares/correlation-id.middleware";
 import { LoggerModule } from "./logger/winston-logger.module";
+import { PrismaHealthIndicator } from "./health/prisma.health";
 
 @Module({
   imports: [TerminusModule, LoggerModule],
   controllers: [ReportsController, MetricsController, HealthController],
-  providers: [ReportsService, ReportsRepository, PrismaService, MetricsService],
+  providers: [
+    ReportsService,
+    ReportsRepository,
+    PrismaService,
+    MetricsService,
+    PrismaHealthIndicator,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

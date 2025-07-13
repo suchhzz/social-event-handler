@@ -1,12 +1,14 @@
 import { Controller, Get } from "@nestjs/common";
 import { HealthCheckService, HealthCheck } from "@nestjs/terminus";
-import { NatsService } from "../nats/nats.service";
+import { NatsHealthIndicator } from "./nats.health";
+import { PrismaHealthIndicator } from "./prisma.health";
 
 @Controller("health")
 export class HealthController {
   constructor(
     private health: HealthCheckService,
-    private natsService: NatsService
+    private readonly natsIndicator: NatsHealthIndicator,
+    private readonly prismaIndicator: PrismaHealthIndicator
   ) {}
 
   @Get("liveness")
@@ -18,6 +20,9 @@ export class HealthController {
   @Get("readiness")
   @HealthCheck()
   readiness() {
-    return this.health.check([() => this.natsService.checkConnection()]);
+    return this.health.check([
+      async () => this.natsIndicator.isHealthy(),
+      async () => this.prismaIndicator.isHealthy(),
+    ]);
   }
 }

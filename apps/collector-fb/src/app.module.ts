@@ -10,6 +10,8 @@ import { HealthController } from "./health/health.controller";
 import { TerminusModule } from "@nestjs/terminus";
 import { CorrelationIdMiddleware } from "./common/middlewares/correlation-id.middleware";
 import { LoggerModule } from "./logger/winston-logger.module";
+import { NatsHealthIndicator } from "./health/nats.health";
+import { PrismaHealthIndicator } from "./health/prisma.health";
 
 @Module({
   imports: [TerminusModule, LoggerModule],
@@ -21,6 +23,8 @@ import { LoggerModule } from "./logger/winston-logger.module";
     FacebookService,
     PrismaService,
     MetricsService,
+    NatsHealthIndicator,
+    PrismaHealthIndicator,
   ],
 })
 export class AppModule implements NestModule {
