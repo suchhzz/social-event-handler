@@ -80,16 +80,16 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
-    # depends_on:
-    #   - postgres
+    depends_on:
+      - postgres
 
   migrate:
-    image: node:18-alpine
+    image: node:20
     working_dir: /app
     volumes:
-      - ./apps/collector-fb:/app
-      - /app/node_modules
-    command: ["npx", "prisma", "migrate", "deploy"]
+      - ./libs/db:/app
+      - ./libs/db/node_modules:/app/node_modules
+    command: sh -c "npm install && npx prisma migrate deploy"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
     depends_on:
@@ -120,6 +120,12 @@ services:
     restart: always
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
 
 volumes:
   postgres-data:

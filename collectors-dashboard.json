@@ -1,0 +1,203 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "facebook, tiktok collectors",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cerp25ole6ebka"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_ttk_events_accepted_total[1m])",
+          "legendFormat": "ttk-accepted",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_ttk_events_processed_total[1m])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "ttk-processed",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_ttk_events_failed_total[1m])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "ttk-failed",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_fb_events_accepted_total[1m])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "fb-accepted",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_fb_events_processed_total[1m])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "fb-processed",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cerp25ole6ebka"
+          },
+          "editorMode": "code",
+          "expr": "rate(collector_fb_events_failed_total[1m])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "fb-failed",
+          "range": true,
+          "refId": "F"
+        }
+      ],
+      "title": "New panel",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2025-07-13T07:33:09.657Z",
+    "to": "2025-07-13T07:56:20.820Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Collectors dashboard",
+  "uid": "b58643ff-b8b6-4c5a-a63f-1eeacbef36e9",
+  "version": 1
+}
