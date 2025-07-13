@@ -1,9 +1,13 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { NatsService } from "./nats/nats.service";
+import { MetricsService } from "./metrics/metrics.service";
 
 @Controller("events")
 export class AppController {
-  constructor(private readonly natsService: NatsService) {}
+  constructor(
+    private readonly natsService: NatsService,
+    private readonly metricsService: MetricsService
+  ) {}
 
   @Post()
   async handleEvent(@Body() body: any) {
@@ -15,6 +19,8 @@ export class AppController {
     }
 
     for (const event of body) {
+      this.metricsService.acceptedEvents.inc();
+
       const source = event.source?.toLowerCase();
 
       let topic: string;
@@ -28,7 +34,9 @@ export class AppController {
 
       try {
         await this.natsService.publish(topic, event);
+        this.metricsService.processedEvents.inc();
       } catch (error) {
+        this.metricsService.failedEvents.inc();
         console.error("Failed to publish event to NATS:", error);
       }
     }
@@ -37,12 +45,5 @@ export class AppController {
       status: "ok",
       message: "Events processed and published to NATS",
     };
-  }
-
-  @Get()
-  test() {
-    console.log("test");
-
-    return { message: "test" };
   }
 }

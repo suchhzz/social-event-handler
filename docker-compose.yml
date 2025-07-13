@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./apps/gateway:/app
-      - /app/node_modules
+      - ./apps/gateway/node_modules:/app/node_modules
     ports:
       - "3000:3000"
     environment:

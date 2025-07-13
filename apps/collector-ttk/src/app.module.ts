@@ -4,14 +4,18 @@ import { TiktokConsumer } from "./consumers/tiktok.consumer";
 import { PrismaService } from "./prisma/prisma.service";
 import { TiktokRepository } from "./app.repository";
 import { TiktokService } from "./app.service";
+import { MetricsService } from "./metrics/metrics.service";
+import { MetricsController } from "./metrics/metrics.controller";
 
 @Module({
+  controllers: [MetricsController],
   providers: [
     NatsService,
     TiktokConsumer,
     TiktokRepository,
     TiktokService,
     PrismaService,
+    MetricsService,
   ],
 })
 export class AppModule {}
