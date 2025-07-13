@@ -1,38 +1,191 @@
-version: "3.8"
-
 services:
+  postgres:
+    image: postgres:16
+    container_name: universe-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: universe
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d universe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf
+      - nats-data:/data
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    restart: always
+
   gateway:
     build:
-      context: .
-      dockerfile: apps/gateway/Dockerfile.dev
+      context: ./apps/gateway
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./:/app
-      - /app/node_modules
+      - ./apps/gateway:/app
+      - ./apps/gateway/node_modules:/app/node_modules
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 30s
+    init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://gateway:3000/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
 
-  collector:
+  collector-fb:
     build:
       context: .
-      dockerfile: apps/collector/Dockerfile.dev
+      dockerfile: ./apps/collector-fb/Dockerfile.dev
     volumes:
-      - ./:/app
-      - /app/node_modules
+      - ./apps/collector-fb:/app
+      - ./apps/collector-fb/node_modules:/app/node_modules
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://collector-fb:3001/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
 
-  reporter:
+  collector-ttk:
     build:
       context: .
-      dockerfile: apps/reporter/Dockerfile.dev
+      dockerfile: ./apps/collector-ttk/Dockerfile.dev
     volumes:
-      - ./:/app
-      - /app/node_modules
+      - ./apps/collector-ttk:/app
+      - ./apps/collector-ttk/node_modules:/app/node_modules
     ports:
       - "3002:3002"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://collector-ttk:3002/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  reporter:
+    build:
+      context: .
+      dockerfile: ./apps/reporter/Dockerfile.dev
+    volumes:
+      - ./apps/reporter:/app
+      - ./apps/reporter/node_modules:/app/node_modules
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://reporter:3003/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  migrate:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./libs/db:/app
+      - ./libs/db/node_modules:/app/node_modules
+    command: sh -c "npm install && npx prisma migrate deploy"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  publisher:
+    image: andriiuni/events
+    platform: linux/arm64
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      - EVENT_ENDPOINT=http://gateway:3000/events
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    restart: always
+    depends_on:
+      gateway:
+        condition: service_healthy
+      collector-fb:
+        condition: service_healthy
+      collector-ttk:
+        condition: service_healthy
+      reporter:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3004:3000"
+    restart: always
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      gateway:
+        condition: service_healthy
+      collector-fb:
+        condition: service_healthy
+      collector-ttk:
+        condition: service_healthy
+      reporter:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  nats-data:
+  grafana-data:

@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY ./apps/collector-fb/package.json .
+COPY ./apps/collector-fb/package-lock.json .
+
+RUN npm install --omit=dev
+
+COPY ./apps/collector-fb .
+COPY libs/db/prisma/schema.prisma ./prisma/schema.prisma
+
+RUN npm run build && \
+    npm run prisma:generate
+
+EXPOSE 3001
+CMD ["node", "dist/main.js"]

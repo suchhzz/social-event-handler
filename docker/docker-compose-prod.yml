@@ -38,29 +38,6 @@ services:
       timeout: 5s
       retries: 5
 
-  collector-fb:
-    build:
-      context: .
-      dockerfile: ./apps/collector-fb/Dockerfile.prod
-    volumes:
-      - ./apps/collector-fb:/app
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universe
-    depends_on:
-      postgres:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://collector-fb:3001/health/liveness"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
   publisher:
     image: andriiuni/events
     platform: linux/arm64
@@ -69,7 +46,6 @@ services:
         condition: service_healthy
     environment:
       - EVENT_ENDPOINT=http://gateway:3000/events
-    restart: always
 
   nats:
     image: nats:latest
