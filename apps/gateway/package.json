@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node dist/main.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest --config jest.config.ts",
+    "test:watch": "jest --watch --config jest.config.ts",
+    "test:cov": "jest --coverage --config jest.config.ts"
   },
   "dependencies": {
     "@myorg/common": "file:../../libs/common",
