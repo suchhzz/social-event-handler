@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache openssl
+
+COPY ./libs/db/package.json ./
+
+RUN npm install
+
+COPY ./libs/db/prisma/schema.prisma ./prisma/
+COPY ./libs/db/prisma/migrations ./prisma/migrations/
+
+
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma generate"]

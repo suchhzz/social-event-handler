@@ -4,16 +4,17 @@ WORKDIR /app
 
 RUN apk add --no-cache curl openssl
 
-COPY ./apps/collector-fb/package.json .
-COPY ./apps/collector-fb/package-lock.json .
+COPY ./apps/collector-ttk/package.json .
+COPY ./apps/collector-ttk/package-lock.json .
 
 RUN npm install --omit=dev
 
-COPY ./apps/collector-fb .
+
+COPY ./apps/collector-ttk .
 COPY libs/db/prisma/schema.prisma ./prisma/schema.prisma
 
 RUN npm run build && \
     npm run prisma:generate
 
-EXPOSE 3001
+EXPOSE 3002
 CMD ["node", "dist/main.js"]
