@@ -42,6 +42,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    stop_grace_period: 30s
+    init: true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/health/liveness"]
       interval: 10s

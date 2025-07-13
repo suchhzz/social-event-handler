@@ -6,6 +6,7 @@ import { HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
 export class NatsService implements OnModuleInit, OnModuleDestroy {
   private nc: NatsConnection | null = null;
   private sc = StringCodec();
+  private isShuttingDown = false;
 
   async onModuleInit() {
     this.nc = await connect({ servers: ["nats://nats:4222"] });
@@ -41,5 +42,19 @@ export class NatsService implements OnModuleInit, OnModuleDestroy {
     throw new HealthCheckError("NATS is not connected", {
       nats: { status: "down" },
     });
+  }
+
+  async gracefulDisconnect() {
+    if (this.isShuttingDown || !this.nc) return;
+    this.isShuttingDown = true;
+
+    try {
+      await this.nc.drain();
+      console.log("NATS connection drained successfully");
+    } catch (err) {
+      console.error("Error draining NATS connection:", err);
+    } finally {
+      await this.nc.close();
+    }
   }
 }
