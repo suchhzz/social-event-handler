@@ -36,7 +36,7 @@ The system consists of the following services, orchestrated via `docker-compose`
 ### Copy data from env.prod / env.dev to .env
 
 ```
-cp env.dev .env
+cp .env.dev .env
 ```
 
 ## Installation
