@@ -30,3 +30,5 @@ npm install
 npx prisma generate
 
 echo "Done!"
+
+docker compose up --build
