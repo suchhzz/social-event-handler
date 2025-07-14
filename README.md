@@ -32,6 +32,13 @@ The system consists of the following services, orchestrated via `docker-compose`
 
 ---
 
+## Preparing
+### Copy data from env.prod / env.dev to .env
+
+```
+cp env.dev .env
+```
+
 ## Installation
 
 ### Option 1: One-command setup
@@ -68,12 +75,14 @@ npx prisma generate
 cd ../reporter
 npm install
 npx prisma generate
+
+docker compose up --build
 ```
 
 Then start the application with:
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Grafana Dashboards
